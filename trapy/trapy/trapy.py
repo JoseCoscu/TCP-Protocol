@@ -1,5 +1,14 @@
-class Conn:
-    pass
+import socket
+from utils import parse_address
+
+class Conn():
+    def __init__(self, source, address=None, socke=None):
+        if (socke==None):
+            sock = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_RAW)
+        
+        self.socket=sock
+        self.source = source
+        self.address = address 
 
 
 class ConnException(Exception):
@@ -7,11 +16,15 @@ class ConnException(Exception):
 
 
 def listen(address: str) -> Conn:
-    pass
+    connx = Conn(None, address)
+    addrs_tuple = parse_address(address)
+    connx.socket.bind(addrs_tuple)
+    return connx
 
 
 def accept(conn) -> Conn:
-    pass
+    conn.socket.accept()
+    return conn
 
 
 def dial(address) -> Conn:
