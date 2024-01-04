@@ -1,7 +1,7 @@
 import socket
 import logging
 
-from .utils import parse_address
+from utils import parse_address
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +26,7 @@ def listen(address):
     logger.info(f'socket binded to {address}')
     conn.socket.bind((host, port))
     conn.socket.listen(1)
-
+    print(f'socket binded to {address}')
     return conn
 
 
