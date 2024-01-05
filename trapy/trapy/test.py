@@ -1,4 +1,3 @@
-from trapy import listen, accept
+from trapy import listen, accept, hand_shake
 
-conn = listen('127.0.0.1:8888')
-accept(conn)
+conn = listen('127.0.0.1:9999')

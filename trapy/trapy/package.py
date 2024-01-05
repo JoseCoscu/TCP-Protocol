@@ -67,7 +67,7 @@ class Package:
         return lista
 
 
-p = Package('192.168.1.1','192.168.1.2',0,9,1,1,0,255,b'hello')
+p = Package('192.168.1.1','192.168.1.2',0,9,1,1,0,255,b'h')
 
 print(p.unzip(p.build_pck()))
 print(Package.prepare_checksum_info(p))
