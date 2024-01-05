@@ -1,7 +1,7 @@
 from socket_trapy import dial, send, close
 addr = '127.0.0.1:9999'
 s = dial(addr)
-print('...')
+print('Conexion Exitosa')
 while True:
     _msg = input()
     msg = _msg.encode('utf-8')
