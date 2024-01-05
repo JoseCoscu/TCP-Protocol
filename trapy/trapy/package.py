@@ -13,16 +13,6 @@ class Package:
         self.window_size = window_size
         self.data = data
 #crear packete en formato binario 
-    def pack_header_bin(self):
-        ip_header = socket.inet_aton(self.src)
-        ip_header += socket.inet_aton(self.dest)
-        
-        tcp_header = struct.pack('!2h2i2h', self.src_port, self.dest_port,self.sq_num, self.ack, self.flags, self.window_size)
-        
-        ## TERMINAR DE ARMAR EL HEADER CON EL CHECKSUM YA PUESTO
-        ## COMPROBAR ENVIAR UN HEADER CON EL ACK EN EL ACCEPT
-        
-        return  ip_header, tcp_header
     @staticmethod
     def prepare_checksum_info(self) -> bytes:
         # Construir la pseudo-cabecera
@@ -42,20 +32,6 @@ class Package:
         tcp_header: bytes = struct.pack('!2h2i2hi', self.src_port, self.dest_port,
                                          self.sq_num, self.ack, self.flags, self.window_size, 
                                          Package.check_sum(pseudo_header + tcp_headers_no_checkSum + self.data))
-
-        # tcp_header = struct.pack('!HHLLBBHHH', 
-        #                          self.src_port, 
-        #                          self.dest_port, 
-        #                          self.sq_num, 
-        #                          self.ack, 
-        #                          (5 << 4),  # Longitud del encabezado TCP (5 palabras de 32 bits = 20 bytes) << 4, 0 para reservado
-        #                          self.flags, 
-        #                          self.window_size)  # Urgent pointer (si se usa)
-        # print(tcp_header)
-        
-        # # Asegurar que la longitud total sea par
-        # if len(self.data) % 2 != 0:
-        #     self.data += b'\x00'
 
         # Unir todo para el cálculo del checksum
         return pseudo_header + tcp_header + self.data
@@ -80,10 +56,21 @@ class Package:
         
         return inf
 
-
+    def unzip(self,pack)->list:
+        tcp_header= struct.unpack('!2h2i2hi', pack[8:28]) 
+        tcp_header = list(tcp_header)
+        l=list(pack[28:])
+        print(pack[28:])
+        print(l)
+        
+        lista = [socket.inet_ntoa(pack[0:4]),socket.inet_ntoa(pack[4:8])]+tcp_header + list(pack[28:])
+        return lista
 
 
 p = Package('192.168.1.1','192.168.1.2',0,9,1,1,0,255,b'hello')
-# print(Package.check_sum(Package.prepare_checksum_info(p)))
-print(p.build_pck()[0])
+
+print(p.unzip(p.build_pck()))
+print(Package.prepare_checksum_info(p))
+
+
 
