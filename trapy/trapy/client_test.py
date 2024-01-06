@@ -12,15 +12,21 @@
 
 #from socket_trapy import send, dial
 #from package import *
+
+from package import Package
 from utils import *
-import socket
-from trapy import *
+from trapy import send,Conn
 
 
 # s=dial(addr)
+addrs= '127.0.0.1:9999'
+conn = Conn(addrs)
+pkg = Package('127.0.0.1','127.0.0.2',9999,9999,1,1,128,255,b'JoseCoscu')
+pkg = pkg.build_pck()
+send(conn,pkg,addrs)
+print ("PKG enviado")
 
-
-dial('127.0.0.1:9999')
+#dial('127.0.0.1:9999')
 
 
 
