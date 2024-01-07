@@ -18,7 +18,6 @@ class Package:
         # Construir la pseudo-cabecera
         # if isinstance(self.data, str):
         #     self.data = self.data.encode('utf-8')
-
         pseudo_header = socket.inet_aton(self.src)
         pseudo_header += socket.inet_aton(self.dest)
 
@@ -55,17 +54,10 @@ class Package:
         inf=Package.prepare_checksum_info(self)
         
         return inf
-
-    def unzip(self,pack:bytes)->list:
+    @staticmethod
+    def unzip(pack:bytes)->list:
         tcp_header= struct.unpack('!2h2i2hi', pack[8:28]) 
         tcp_header = list(tcp_header)
         l=list(pack[28:])
         lista = [socket.inet_ntoa(pack[0:4]),socket.inet_ntoa(pack[4:8])]+tcp_header + list(pack[28:])
         return lista
-
-
-p = Package('192.168.1.1','192.168.1.2',0,9,1,1,0,255,b'JoseCoscu')
-
-print(p.unzip(p.build_pck()))
-print(Package.prepare_checksum_info(p))
-

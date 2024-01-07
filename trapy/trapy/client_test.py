@@ -12,19 +12,31 @@
 
 #from socket_trapy import send, dial
 #from package import *
-
+import time
+import socket
 from package import Package
 from utils import *
-from trapy import send,Conn
+from trapy import send,Conn,listen, dial
 
-
-# s=dial(addr)
 addrs= '127.0.0.1:9999'
-conn = Conn(addrs)
-pkg = Package('127.0.0.1','127.0.0.2',9999,9999,1,1,128,255,b'JoseCoscu')
-pkg = pkg.build_pck()
-send(conn,pkg,addrs)
-print ("PKG enviado")
+
+dial(addrs)
+
+# conn = Conn(addrs)
+# pkg = Package('127.0.0.1','127.0.0.1',9999,9999,1000,0,130,255,b'JOSEEEE')
+
+# _pkg = pkg.build_pck()
+# print(_pkg)
+# send(conn,_pkg,'127.0.0.1:9999')
+# print ("PKG enviado")
+# time.sleep(1)
+# conn=listen(addrs)
+# print('esperando data')
+# data, _ = conn.socket.recvfrom(65565)
+# data=data[20:]
+# l=Package.unzip(data)
+# print(l)
+
 
 #dial('127.0.0.1:9999')
 

@@ -1,6 +1,7 @@
 import socket
 from package import Package
-from utils import parse_address
+from utils import parse_address, get_host_ip
+import time
 
 
 class Conn:
@@ -8,6 +9,7 @@ class Conn:
         if sock is None:
             sock = socket.socket(socket.AF_INET, socket.SOCK_RAW,
                                  socket.IPPROTO_RAW)
+            #sock.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, 1)
         self.socket = sock
         self.src = src
         self.dest = dest
@@ -33,12 +35,29 @@ def accept(conn) -> Conn:
 
 
 def dial(address) -> Conn:
-    conn: Conn = Conn(src=address)
-    send(conn,b'JoseCoscu',address)
+    #se crea pakt syn y se envia a la direeccion de destino
+    hostD,portD=parse_address(address)
+    
+    ip="127.0.0.1"#get_host_ip()
+
+    print("ip: ",ip)
+    conn = Conn(f'{ip}:{portD}')
+    pkg = Package(ip,hostD,portD,portD,1000,0,130,255,b'').build_pck()
+    send(conn, pkg, address)
+    time.sleep(1)
+    conn = listen(f'{ip}:{portD}')
+    print("esperando data")
+    data, _ = conn.socket.recvfrom(255)
+    data = data[20:]
+    print(Package.unzip(data))
+
+    print("Conexion establecida")
+
     return conn
 
 
 def send(conn: Conn, data: bytes, address) -> int:
+    #conn.socket.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, 1)
     conn.socket.sendto(data,parse_address(address))
     return len(data)
 
@@ -52,20 +71,28 @@ def close(conn: Conn):
 
 
 #### Flagsss -->>> 0:NS 1:CWR 2:ECE 3:URG 4:ACK 5:PSH 6:RST 7:SYN 8:FIN
-
+####pakt
 def hand_shake(conn:Conn):
     print("waiting data")
-    data, adrrs = conn.socket.recvfrom(512)
-    
-    l=Package.unzip(data,data)
-    print("PKG recivido")
-    
-    if (l[22] & 1<<7):
-        print("SYN recivido")
-        print("enviar ACK SYN")
-        send()
+    data, _ = conn.socket.recvfrom(65565)
+    data=data[20:]
+    l=Package.unzip(data)
+    print(l[8])
 
-    print("PKG recivido")
-    print(l)
-    
+    if(l[8]==Package.check_sum(data[:24]+data[28:])):
+        
+        print("PKG recivido")
+        if (l[6] & 1<<1):
+            print("SYN recivido")
+            print(l)
+            conn.dest=f'{l[1]:}:{l[3]}'
+            hostS,portS=parse_address(conn.src)
+            hostD,portD=parse_address(conn.dest)
+            packSINACK=Package(hostS,hostD,portS,portD,l[5]+1,l[4]+1,144,255,b'').build_pck()
+            time.sleep(1.5)
+            print("enviando ack/syn")
+            conn.socket.sendto(packSINACK,parse_address(conn.dest))
+    #else aceptar la conexion primro 
+
+    return conn
     return
