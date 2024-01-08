@@ -20,8 +20,7 @@ from trapy import send,Conn,listen, dial
 
 addrs= '127.0.0.1:9999'
 conn=dial(addrs)
-time.sleep(2)
-#send(conn,b"Hello world",addrs)
+send(conn,b"Hello world",addrs)
 
 # dial(addrs)
 

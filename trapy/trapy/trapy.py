@@ -55,7 +55,7 @@ def dial(address) -> Conn:
     print("ip: ",ip)
     conn = Conn(f'{ip}:{portD}') 
     conn.numseq = random.randint(1,100)
-    pkg = Package(ip, hostD, portD, portD, conn.numseq,0,SYN,255,b'').build_pck()
+    pkg = Package(ip, hostD, portD, portD, conn.numseq,0,SYN,255,b'a').build_pck()
     print(Package.unzip(pkg))
     conn.socket.sendto(pkg,parse_address(address))
     time.sleep(1)
@@ -72,8 +72,9 @@ def dial(address) -> Conn:
     # elif(conn.numseq+1==data[5]):
     #     return print("safasfafasffe")
 
-    pkg_ack=Package(ip,hostD,portD,portD,conn.numseq,conn.ack,ACK,255,b'').build_pck()
+    pkg_ack=Package(ip,hostD,portD,portD,conn.numseq,conn.ack,ACK,255,b'aaa').build_pck()
     print(Package.unzip(pkg_ack))
+    time.sleep(1.5)
     conn.socket.sendto(pkg_ack,parse_address(address))
     
 
@@ -145,20 +146,21 @@ def hand_shake(conn:Conn):
         if (pkg[6] & SYN):
             print("PKG SYN recivido")
             conn.numseq = random.randint(1,100)
-            packSINACK=Package(hostS,hostD,portS,portD,conn.numseq,pkg[4]+1,144,255,b'').build_pck()
+            packSINACK=Package(hostS,hostD,portS,portD,conn.numseq,pkg[4]+1,144,255,b'aa').build_pck()
             time.sleep(1.5)
-            print("Enviando ack/syn")
+            print("Enviando ack/syn", Package.unzip(packSINACK))
             conn.socket.sendto(packSINACK,_dest)
             
-        else:
-            packRST=Package(hostS,hostD,portS,portD,0,0,RST,255,b'').build_pck()
-            time.sleep(1.5)
-            conn.socket.sendto(packRST, _dest)
+        # else:
+        #     packRST=Package(hostS,hostD,portS,portD,0,0,RST,255,b'').build_pck()
+        #     time.sleep(1.5)
+        #     conn.socket.sendto(packRST, _dest)
 
     
     data_ack, _ = conn.socket.recvfrom(65565)
+    data_ack, _ = conn.socket.recvfrom(65565)
     data_ack = Package.unzip(data_ack[20:])
-    print(data_ack)
+    print("ACK",data_ack)
     conn.ack = data_ack[5]
     conn.numseq = data_ack[4]
 

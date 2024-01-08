@@ -6,7 +6,7 @@ addr = '127.0.0.1:0'
 conn = listen(addr)
 conn = accept(conn)
 
-#recv(conn, 255)
+recv(conn, 255)
 
 
 
