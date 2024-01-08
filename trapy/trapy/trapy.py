@@ -25,7 +25,7 @@ class Conn:
         self.numseq=0
         self.buff = b''
     def __repr__(self) -> str:
-        return f'source:{self.src}\n dest:{self.dest}'
+        return f'source:{self.src}\n dest:{self.dest}\n ack: {self.ack}\n sqnum: {self.numseq}'
 
 class ConnException(Exception):
     pass
@@ -41,6 +41,8 @@ def listen(address: str) -> Conn:
 
 def accept(conn) -> Conn:
     conn = hand_shake(conn)
+    print("HandShake succesfull!!!!!")
+    
     return conn
 
 
@@ -53,15 +55,27 @@ def dial(address) -> Conn:
     print("ip: ",ip)
     conn = Conn(f'{ip}:{portD}') 
     conn.numseq = random.randint(1,100)
-    pkg = Package(ip, hostD, portD, portD, conn.numseq,0,130,255,b'').build_pck()
-    # conn.socket.sendto(pkg,parse_address(address))
-    send(conn,b'', address)
+    pkg = Package(ip, hostD, portD, portD, conn.numseq,0,SYN,255,b'').build_pck()
+    print(Package.unzip(pkg))
+    conn.socket.sendto(pkg,parse_address(address))
     time.sleep(1)
     conn = listen(f'{ip}:{portD}')
-    print("esperando data")
+    print("Esperando data")
     data, _ = conn.socket.recvfrom(255)
-    data = data[20:]
-    print(Package.unzip(data))
+    data = Package.unzip(data[20:])
+    conn.numseq=data[5]
+    conn.ack=data[4]+1
+    print(data)
+
+    # if(data[6] & RST):
+    #     return print("no enviaste un segmento syn")
+    # elif(conn.numseq+1==data[5]):
+    #     return print("safasfafasffe")
+
+    pkg_ack=Package(ip,hostD,portD,portD,conn.numseq,conn.ack,ACK,255,b'').build_pck()
+    print(Package.unzip(pkg_ack))
+    conn.socket.sendto(pkg_ack,parse_address(address))
+    
 
     print("Conexion establecida")
 
@@ -76,6 +90,7 @@ def send(conn: Conn, data: bytes, address) -> int:
        hostD,portD=parse_address(conn.src)
        hostS, portS = parse_address(address)
        pkg = Package(hostD,hostS,portD,portS,conn.numseq,conn.ack, ACK, WINDOW_SIZE, data ).build_pck()
+       
        print (pkg)
        return conn.socket.sendto(pkg,parse_address(address))
 
@@ -85,13 +100,15 @@ def send(conn: Conn, data: bytes, address) -> int:
     index = 0
     cant=1
     num_pkg = m.ceil(data_len / (max_data))
-    while cant<=num_pkg:
+    while cant <= num_pkg:
         data_list.append(data[index:max_data+index])
         cant+=1
         index+=max_data
 
     for i in data_list:
         send(conn, i, address)
+        conn.ack+=1
+        conn.numseq+=1
 
 
     
@@ -99,7 +116,11 @@ def send(conn: Conn, data: bytes, address) -> int:
 
 
 def recv(conn: Conn, length: int) -> bytes:
-    pass
+    print("esperando datos")
+    data, _ = conn.socket.recvfrom(65565)
+    data = Package.unzip(data[20:])
+    print(data)
+    return 
 
 
 def close(conn: Conn):
@@ -114,23 +135,31 @@ def hand_shake(conn:Conn):
     data, _ = conn.socket.recvfrom(65565)
     data=data[20:]
     pkg=Package.unzip(data)
-    print(pkg[8])
 
-    if(pkg[8]==Package.check_sum(data[:24]+data[28:])):
-        
+    if(pkg[8] == Package.check_sum(data[:24]+data[28:])):
         print("PKG recivido")
+        conn.dest = f'{pkg[1]:}:{pkg[3]}'
+        hostS,portS = parse_address(conn.src)
+        hostD,portD = parse_address(conn.dest)
+        _dest = parse_address(conn.dest)
         if (pkg[6] & SYN):
             print("PKG SYN recivido")
-            print(pkg)
-            conn.dest=f'{pkg[1]:}:{pkg[3]}'
-            hostS,portS=parse_address(conn.src)
-            hostD,portD=parse_address(conn.dest)
-            packSINACK=Package(hostS,hostD,portS,portD,pkg[5]+1,pkg[4]+1,144,255,b'').build_pck()
+            conn.numseq = random.randint(1,100)
+            packSINACK=Package(hostS,hostD,portS,portD,conn.numseq,pkg[4]+1,144,255,b'').build_pck()
             time.sleep(1.5)
-            print("enviando ack/syn")
-            conn.socket.sendto(packSINACK,parse_address(conn.dest))
+            print("Enviando ack/syn")
+            conn.socket.sendto(packSINACK,_dest)
+            
         else:
-            return
-             #else aceptar la conexion primro 
+            packRST=Package(hostS,hostD,portS,portD,0,0,RST,255,b'').build_pck()
+            time.sleep(1.5)
+            conn.socket.sendto(packRST, _dest)
+
+    
+    data_ack, _ = conn.socket.recvfrom(65565)
+    data_ack = Package.unzip(data_ack[20:])
+    print(data_ack)
+    conn.ack = data_ack[5]
+    conn.numseq = data_ack[4]
 
     return conn

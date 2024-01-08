@@ -1,10 +1,12 @@
 #from socket_trapy import listen, accept, recv, close
-from trapy import listen, hand_shake, accept
+from trapy import listen, hand_shake, accept, recv
 import socket
 addr = '127.0.0.1:0'
 
 conn = listen(addr)
-accept(conn)
+conn = accept(conn)
+
+#recv(conn, 255)
 
 
 

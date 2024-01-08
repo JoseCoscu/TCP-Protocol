@@ -19,8 +19,9 @@ from utils import *
 from trapy import send,Conn,listen, dial
 
 addrs= '127.0.0.1:9999'
-
-send(Conn(addrs),b'pepe le tanke de marianao',addrs)
+conn=dial(addrs)
+time.sleep(2)
+#send(conn,b"Hello world",addrs)
 
 # dial(addrs)
 
