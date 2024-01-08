@@ -61,3 +61,4 @@ class Package:
         l=list(pack[28:])
         lista = [socket.inet_ntoa(pack[0:4]),socket.inet_ntoa(pack[4:8])]+tcp_header + list(pack[28:])
         return lista
+    

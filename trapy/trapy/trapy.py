@@ -3,6 +3,7 @@ from package import Package
 from utils import parse_address, get_host_ip
 import time
 
+PKG_SIZE = 512
 
 class Conn:
     def __init__(self, src: str, dest=None, sock=None):
@@ -56,9 +57,17 @@ def dial(address) -> Conn:
     return conn
 
 
-def send(conn: Conn, data: bytes, address) -> int:
+def send(conn: Conn, data: bytes, address, split_data=True) -> int:
     #conn.socket.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, 1)
-    conn.socket.sendto(data,parse_address(address))
+    if not split_data:
+       return conn.socket.sendto(data,parse_address(address))
+    
+    pkg_list = []
+    index = 0
+    data_len = len(data)
+    num_pkg = data_len / (PKG_SIZE - 28)
+
+    
     return len(data)
 
 
@@ -82,8 +91,8 @@ def hand_shake(conn:Conn):
     if(l[8]==Package.check_sum(data[:24]+data[28:])):
         
         print("PKG recivido")
-        if (l[6] & 1<<1):
-            print("SYN recivido")
+        if (l[6] & 1<<7):
+            print("PKG SYN recivido")
             print(l)
             conn.dest=f'{l[1]:}:{l[3]}'
             hostS,portS=parse_address(conn.src)
@@ -92,7 +101,8 @@ def hand_shake(conn:Conn):
             time.sleep(1.5)
             print("enviando ack/syn")
             conn.socket.sendto(packSINACK,parse_address(conn.dest))
-    #else aceptar la conexion primro 
+        else:
+            return
+             #else aceptar la conexion primro 
 
     return conn
-    return
