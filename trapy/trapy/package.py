@@ -18,7 +18,8 @@ class Package:
         # Construir la pseudo-cabecera
         # if isinstance(self.data, str):
         #     self.data = self.data.encode('utf-8')
-        pseudo_header = socket.inet_aton(self.src)
+        pseudo_header = b'\x00\x0f\x00\x0f' 
+        pseudo_header += socket.inet_aton(self.src)
         pseudo_header += socket.inet_aton(self.dest)
 
         # Construir el encabezado TCP sin el campo de checksum
@@ -56,9 +57,10 @@ class Package:
         return inf
     @staticmethod
     def unzip(pack:bytes)->list:
-        tcp_header= struct.unpack('!2h2i2hi', pack[8:28]) 
+        tcp_header= struct.unpack('!2h2i2hi', pack[12:32]) 
         tcp_header = list(tcp_header)
-        l=list(pack[28:])
-        lista = [socket.inet_ntoa(pack[0:4]),socket.inet_ntoa(pack[4:8])]+tcp_header + list(pack[28:])
+        l=list(pack[32:])
+        print(pack[0:4])
+        lista = [pack[0:4],socket.inet_ntoa(pack[4:8]),socket.inet_ntoa(pack[8:12])]+tcp_header + list(pack[32:])
         return lista
     
