@@ -20,7 +20,9 @@ from trapy import send,Conn,listen, dial
 
 addrs= '127.0.0.1:9999'
 
-dial(addrs)
+send(Conn(addrs),b'pepe le tanke de marianao',addrs)
+
+# dial(addrs)
 
 # conn = Conn(addrs)
 # pkg = Package('127.0.0.1','127.0.0.1',9999,9999,1000,0,130,255,b'JOSEEEE')
