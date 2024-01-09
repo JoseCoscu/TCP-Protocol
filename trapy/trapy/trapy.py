@@ -4,6 +4,8 @@ from utils import parse_address, get_host_ip
 import time
 import random
 import math as m
+from threading import Thread
+from queue import Queue
 
 PKG_SIZE = 30
 WINDOW_SIZE = 5
@@ -94,34 +96,60 @@ def send(conn: Conn, data: bytes, address) -> int:
        
        print (pkg)
        return conn.socket.sendto(pkg,parse_address(address))
-
     
-    
-    data_list = []
-    index = 0
-    cant=1
-    num_pkg = m.ceil(data_len / (max_data))
-    while cant <= num_pkg:
-        data_list.append(data[index:max_data+index])
-        cant+=1
-        index+=max_data
+    # Lógica para dividir datos en paquetes
+    data_list = [data[i:i + max_data] for i in range(0, len(data), max_data)]
+    num_pkg = m.ceil(data_len / max_data)
 
-    for i in data_list:
-        send(conn, i, address)
-        conn.ack+=1
-        conn.numseq+=1
+    # Función para enviar paquetes en paralelo
+    def send_packet(packet):
+        pkg = Package(hostD,hostS,portD,portS,conn.numseq,conn.ack, ACK, WINDOW_SIZE, packet ).build_pck()
+        print(pkg)
+        conn.socket.sendto(pkg, parse_address(address))
 
+    # Crear y ejecutar hilos para enviar paquetes en paralelo
+    threads = []
+    for packet_data in data_list:
+        thread = Thread(target=send_packet, args=(packet_data,))
+        threads.append(thread)
+        thread.start()
 
-    
+    # Esperar a que todos los hilos terminen
+    for thread in threads:
+        thread.join()
+
     return len(data)
 
 
 def recv(conn: Conn, length: int) -> bytes:
-    print("esperando datos")
-    data, _ = conn.socket.recvfrom(65565)
-    data = Package.unzip(data[20:])
-    print(data)
-    return 
+    received_data = b''
+    queue = Queue()
+
+    # Función para recibir datos en paralelo
+    def receive_data():
+        while True:
+            data, _ = conn.socket.recvfrom(65565)
+            queue.put(data)
+
+    # Iniciar hilo para recibir datos
+    receiver_thread = Thread(target=receive_data)
+    receiver_thread.start()
+
+    # Esperar a que lleguen todos los paquetes
+    while True:
+        try:
+            packet = queue.get(timeout=1)  # Esperar hasta 1 segundo por cada paquete
+            received_data += Package.unzip(packet[20:])
+        except Exception as e:
+            # Si se excede el tiempo de espera o se completa la recepción
+            break
+
+    # Esperar a que termine el hilo de recepción
+    receiver_thread.join()
+
+    received_data(received_data)
+
+    return received_data
 
 
 def close(conn: Conn):

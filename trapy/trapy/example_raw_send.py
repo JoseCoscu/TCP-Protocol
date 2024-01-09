@@ -16,4 +16,4 @@ tcp_header += b'\xe6\x32\x00\x00' # Checksum | Urgent Pointer
 
 packet = ip_header + tcp_header
 print(packet)
-s.sendto(b'hola', ('192.168.2.1', 0))
+s.sendto(packet, ('192.168.2.1', 0))
