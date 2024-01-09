@@ -60,7 +60,6 @@ class Package:
         tcp_header= struct.unpack('!2h2i2hi', pack[12:32]) 
         tcp_header = list(tcp_header)
         l=list(pack[32:])
-        print(pack[0:4])
         lista = [pack[0:4],socket.inet_ntoa(pack[4:8]),socket.inet_ntoa(pack[8:12])]+tcp_header + list(pack[32:])
         return lista
     

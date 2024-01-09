@@ -18,9 +18,11 @@ from package import Package
 from utils import *
 from trapy import send,Conn,listen, dial
 
-addrs= '127.0.0.1:9999'
+addrs= '127.0.0.1:0'
 conn=dial(addrs)
-send(conn,b"Hello world",addrs)
+time.sleep(2)
+print("Enviando datos!!")
+send(conn,b"hello",addrs)
 
 # dial(addrs)
 
